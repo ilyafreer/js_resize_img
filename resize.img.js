@@ -110,29 +110,10 @@
      */
     function setBlobSize(img, id) {
         displayLog('setBlobSize');
-        const canvas = document.createElement('canvas');
-        
-        displayLog('set canvas');
-        
-        let sizes = calculateSizes(img, maxWidthUpload, maxHeightUpload);
-        
-        displayLog(JSON.stringify(sizes));
-        
-        canvas.width = sizes.widthNew;
-        canvas.height = sizes.heightNew;
-        canvas.id = canvasIdPrefix + id;
-                
-        const context = canvas.getContext('2d');
-                
-        context.drawImage(img, 0, 0, sizes.widthOld, sizes.heightOld);
-        
-        displayLog('drawImage');
-        
+        let canvas = calculateSizes(img, id, maxWidthUpload, maxHeightUpload);
         canvas.toBlob(function (blob) {
-            displayLog('insert to Blob');
+            displayLog('toBlob');
             files[id] = blob;
-        
-            displayLog('files count: '+ Object.keys(files).length);
         });
     }
 
@@ -142,18 +123,9 @@
      * @param id
      */
     function setPreview(img, id) {
-        	displayLog('setPreview');
-        const canvas = document.createElement('canvas');
-
-        let sizes = calculateSizes(img, maxWidthPreview, maxHeightPreview);
-        canvas.width = sizes.widthNew;
-        canvas.height = sizes.heightNew;
-        canvas.id = canvasIdPrefix + id;
-
-        const context = canvas.getContext('2d');
-        context.drawImage(img, 0, 0, sizes.widthOld, sizes.heightOld);
-
+        let canvas = calculateSizes(img,id, maxWidthPreview, maxHeightPreview);
         let isNew = true;
+
         let preview = document.querySelector('#preview');
         if (preview.childNodes.length > 0) {
             for (let i = 0; i < preview.childNodes.length; i++) {
@@ -172,34 +144,33 @@
     /**
      *  Calculating sizes for images
      * @param img
+     * @param id
      * @param maxWidth
      * @param maxHeight
      * @returns obj width: number, height: number
      */
-    function calculateSizes(img, maxWidth, maxHeight) {
-	        displayLog('calculateSizes');
+    function calculateSizes(img, id, maxWidth, maxHeight) {
+        const canvas = document.createElement('canvas');
 
         let width = img.width;
         let height = img.height;
 
-        if (width > height) {
-            if (width > maxWidth) {
-                //height *= maxWidth / width;
+        if (width > height && width > maxWidth) {
                 height = Math.round(height *= maxWidth / width);
                 width = maxWidth;
-            }
-        } else {
-            if (height > maxHeight) {
+
+        } else if(height > maxHeight) {
                 width = Math.round(width *= maxHeight / height);
                 height = maxHeight;
-            }
         }
-        return {
-            widthOld:width,
-            heightOld:height,
-            widthNew: width,
-            heightNew: height
-        };
+        canvas.width = width;
+        canvas.height = height;
+        canvas.id = canvasIdPrefix + id;
+
+        const context = canvas.getContext('2d');
+        context.drawImage(img, 0, 0, width, height);
+
+        return canvas;
     }
 
     /**
